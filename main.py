@@ -21,9 +21,10 @@ def doGrupBroadcast():
     #set time pause
     pgui.PAUSE=1
     #content set
-    content="你好"
+    content="你好" \
+    "sd"
     serch_part="BO grp"
-    ran = 20
+    ran = 1
     #action
     ran= ran+1
     for num in range(1,ran):
