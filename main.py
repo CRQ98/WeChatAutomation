@@ -10,7 +10,7 @@ def getmouseposition():
     exit()
 
 def initprompt():
-    print("把微信框放在左上 并到左上框里")
+    print("把微信框放在左上 并到左上框里 不要遮挡\n")
     for i in range(1,15):
         print(f"after {i} sec will START" ,end='\r')
         time.sleep(1)
