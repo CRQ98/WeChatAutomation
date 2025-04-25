@@ -1,2 +1,4 @@
 *.code*
 venv
+.DS_Store
+pic
