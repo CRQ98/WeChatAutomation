@@ -9,12 +9,16 @@ import cv2
 pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
 
 template_list = [
-    "pic/serch_bar.png",
-    "pic/textarea.png",
-    "pic/fileasis.png"
+    "serchbar",
+    "textarea",
+    "copy",
+    "coner"
 ]
-
-screenshotname="screenshot.png"
+template_paths = ["pic/" + template + ".png" for template in template_list]
+screenshotname="pic/screenshot.png"
+locations_dict={}
+#set time pause
+pgui.PAUSE=0.6
 
 def initprompt():
     print("最大化微信 置顶 不要遮挡 6秒后开始\n")
@@ -30,7 +34,8 @@ def PreprocessingImg(imgname):
     binary_img.save(imgname, icc_profile=None)
 
 def PreprocessAllTemplate():
-    for template in template_list:
+    for template in template_paths:
+
         PreprocessingImg(template)
 
 def getTextFromImg(imgname):
@@ -52,6 +57,7 @@ def screenshot():
 
 def locate():
     # 1. 读取截图
+    screenshot()
     image = cv2.imread(screenshotname)  # 大图
 
     # 计算缩放比例
@@ -66,7 +72,8 @@ def locate():
     threshold = 0.9 
     # 2. 定位每一个 template
     for template_name in template_list:
-        template = cv2.imread(template_name)
+        template_path=f"pic/{template_name}.png"
+        template = cv2.imread(template_path)
         if template is None:
             print(f"警告: 模板 {template_name} 加载失败，跳过。")
             continue
@@ -90,61 +97,85 @@ def locate():
             cv2.putText(image, template_name, (pt[0], pt[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1)
 
         # 把所有找到的位置记录下来
-        results[template_name] = found_positions
+        locations_dict[template_name] = found_positions
 
     # 3. 显示带框的匹配图像
-    cv2.imshow("Matched Image", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if 0:
+        cv2.imshow("Matched Image", image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        time.sleep(2)
 
-    return results
+def get_location(name):
+    x,y=locations_dict[name][0]
+    return x,y
+
+def copy(content):
+    pyperclip.copy(content)
+def paste():
+    pgui.click()
+    pgui.hotkey('command','v')
+def insert(content):
+    copy(content)
+    paste()
 
 def getContentFromMyChat():
-    pgui.moveTo(130,65)#serch bar
-    pgui.click()
-    content="文件传输助手"
-    pyperclip.copy(content)
-    pgui.hotkey('command','v')
+    pgui.moveTo(get_location("serchbar"))
+    insert('文件传输助手')
     pgui.typewrite("\n")
-    pgui.moveTo(600,900)#text box
+    pgui.moveTo(1381,757)#text box
     pgui.rightClick()
-    pgui.moveTo(1380,757)
+    locate()
+    time.sleep(2)
+    pgui.moveTo(get_location("copy"))
     pgui.click()
     return pyperclip.paste()
-    
 
-def doGrupBroadcast():
+def GrupBroadcast(serch_part,length):
 
-    #set time pause
-    pgui.PAUSE=1
     #content set
     content=getContentFromMyChat()
-    serch_part="BO grp"
-    ran = 10
+
     #action
-    ran= ran+1
-    for num in range(1,ran):
-        pgui.moveTo(116,65)#serch bar
+    for num in range(1,length+1):
+        pgui.moveTo(get_location("serchbar"))
         pgui.click()
-        serch=f"{serch_part} {num}"
-        pgui.typewrite(serch)
+        serchtext=f"{serch_part} {num}"
+        if num<10:
+            serchtext=f"{serch_part} 0{num}"
+        insert(serchtext)
         pgui.typewrite("\n")
-        pgui.moveTo(400,500)
+        pgui.moveTo(get_location("textarea"))
         pgui.click()
-        pyperclip.copy(content)
-        pgui.hotkey('command','v')
+        insert(content)
 
 def init():
     initprompt()
     PreprocessAllTemplate()
-    screenshot()
-    locations_dict=locate()
-    print(locations_dict)   
+    locate()
+
+serch_part="BO grp"
+length = 3
+time.sleep(4)
+screenshot = pgui.screenshot()
+screenshot.save(screenshotname)
+conerimg="pic/coner.png"
+image=cv2.imread(screenshotname)
+adjusted_image = cv2.convertScaleAbs(image, alpha=3, beta=0)
+gray_image = cv2.cvtColor(adjusted_image, cv2.COLOR_BGR2GRAY)
+_, binary_img = cv2.threshold(gray_image, 128, 255, cv2.THRESH_BINARY)
+cv2.imshow('Original Image', image)
+cv2.imshow('Adjusted Image', adjusted_image)
+cv2.imshow('binary', binary_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+if 0:
+    init()
+    GrupBroadcast(serch_part,length)
 
 
-
-
-init()
+#time.sleep(4)
 #getmouseposition()
-#doGrupBroadcast()
+
 #then conn to llm to get complete and good format text
