@@ -160,15 +160,22 @@ time.sleep(4)
 screenshot = pgui.screenshot()
 screenshot.save(screenshotname)
 conerimg="pic/coner.png"
+mean_brightness = np.mean(screenshot)
 image=cv2.imread(screenshotname)
-adjusted_image = cv2.convertScaleAbs(image, alpha=3, beta=0)
-gray_image = cv2.cvtColor(adjusted_image, cv2.COLOR_BGR2GRAY)
-_, binary_img = cv2.threshold(gray_image, 128, 255, cv2.THRESH_BINARY)
-cv2.imshow('Original Image', image)
-cv2.imshow('Adjusted Image', adjusted_image)
-cv2.imshow('binary', binary_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+
+if mean_brightness<180:
+    adjusted_image = cv2.convertScaleAbs(image, alpha=5, beta=0)
+    gray_image = cv2.cvtColor(adjusted_image, cv2.COLOR_BGR2GRAY)
+    _, binary_img = cv2.threshold(gray_image, 128, 255, cv2.THRESH_BINARY)
+    cv2.imwrite(binary_img,screenshotname)
+else:
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, binary_img = cv2.threshold(gray_image, 250, 255, cv2.THRESH_BINARY)
+    cv2.imshow('Original Image', image)
+    cv2.imshow('gray_image',gray_image)
+    cv2.imshow('binary_img',binary_img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 if 0:
     init()
